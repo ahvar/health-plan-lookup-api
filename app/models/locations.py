@@ -1,7 +1,6 @@
 from app import db
 import sqlalchemy as sa
 import sqlalchemy.orm as so
-from datetime import datetime
 
 
 class State(db.Model):
@@ -9,6 +8,15 @@ class State(db.Model):
     abbreviation: so.Mapped[str] = so.mapped_column(sa.String(2), primary_key=True)
     name: so.Mapped[str] = so.mapped_column(sa.String(50), nullable=False, unique=True)
     counties: so.WriteOnlyMapped["County"] = so.relationship(
+        back_populates="state", cascade="all, delete-orphan"
+    )
+    rate_areas: so.WriteOnlyMapped["RateArea"] = so.relationship(
+        back_populates="state", cascade="all, delete-orphan"
+    )
+    plans: so.WriteOnlyMapped["Plan"] = so.relationship(
+        back_populates="state", cascade="all, delete-orphan"
+    )
+    zip_codes: so.WriteOnlyMapped["ZipCode"] = so.relationship(
         back_populates="state", cascade="all, delete-orphan"
     )
 
@@ -28,11 +36,14 @@ class County(db.Model):
     )
 
     state: so.Mapped["State"] = so.relationship(back_populates="counties")
+    zip_codes: so.WriteOnlyMapped["ZipCode"] = so.relationship(
+        back_populates="county", cascade="all, delete-orphan"
+    )
 
     __table_args__ = (
         sa.UniqueConstraint("code", "state_abbreviation", name="uq_county_code_state"),
         sa.UniqueConstraint("name", "state_abbreviation", name="uq_county_name_state"),
         sa.Index("idx_counties_code", "code"),
         sa.Index("idx_counties_name", "name"),
-        sa.Index("idx_counties_state", "state_abbreviations"),
+        sa.Index("idx_counties_state", "state_abbreviation"),
     )
