@@ -2,7 +2,7 @@ from functools import wraps
 
 from flask import jsonify, render_template_string, request
 
-from app.api.v1 import bp
+from app.api import bp
 
 
 def _prefers_json() -> bool:
@@ -32,6 +32,10 @@ def bad_request(message):
 
 def unauthorized(message):
     return jsonify({"error": "unauthorized", "message": message}), 401
+
+
+def forbidden(message):
+    return jsonify({"error": "forbidden", "message": message}), 403
 
 
 def not_found(message):

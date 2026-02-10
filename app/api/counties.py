@@ -2,9 +2,9 @@ import sqlalchemy as sa
 from flask import jsonify, request
 
 from app import db
-from app.api.v2 import bp
-from app.api.v2.auth import require_api_key
-from app.api.v2.errors import api_error_boundary, bad_request
+from app.api import bp
+from app.api.authentication import require_api_key
+from app.api.errors import api_error_boundary, bad_request
 from app.models import County
 
 
@@ -24,14 +24,11 @@ def get_counties():
 
     return jsonify(
         {
-            "data": [
+            "counties": [
                 {
-                    "id": county.code,
-                    "type": "county",
-                    "attributes": {
-                        "name": county.name,
-                        "state": county.state_abbreviation,
-                    },
+                    "code": county.code,
+                    "name": county.name,
+                    "state": county.state_abbreviation,
                 }
                 for county in counties
             ]

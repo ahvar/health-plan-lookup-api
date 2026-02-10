@@ -2,9 +2,9 @@ import sqlalchemy as sa
 from flask import jsonify, request
 
 from app import db
-from app.api.v1 import bp
-from app.api.v1.auth import require_api_key
-from app.api.v1.errors import api_error_boundary, bad_request
+from app.api import bp
+from app.api.authentication import require_api_key
+from app.api.errors import api_error_boundary, bad_request
 from app.models import ZipCode
 
 
