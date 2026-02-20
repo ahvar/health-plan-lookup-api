@@ -1,53 +1,74 @@
-from . import app
+import sqlalchemy as sa
+from flask import jsonify, request
+
+from app import db
+from app.api import bp
+from app.api.authentication import require_api_key
+from app.api.errors import api_error_boundary, bad_request
+from app.models import MetalLevel, Plan, RateArea
 
 
-@app.route("/api/v1/plans?state=<state>&rate_area=<rate_area>&metal_level=<metal_level", methods=['GET'])
-def get_plans_st_ra_ml(state, rate_area, metal_level):
-    """
-    Get the available plans and rates by state, rate area, and metal level
+@bp.get("/plans")
+@require_api_key
+@api_error_boundary
+def get_plans():
+    state = request.args.get("state")
+    rate_area = request.args.get("rate_area", type=int)
+    metal_level = request.args.get("metal_level")
 
-    :param state: state
-    :param rate_area: rate area
-    :param metal_level: metal level
-    :return plans: plan data
-    """
-    pass
+    stmt = sa.select(Plan).join(RateArea).join(MetalLevel)
 
+    if state:
+        stmt = stmt.where(Plan.state_abbreviation == state.strip().upper())
+    if rate_area is not None:
+        stmt = stmt.where(RateArea.area_number == rate_area)
+    if metal_level:
+        stmt = stmt.where(sa.func.lower(MetalLevel.name) == metal_level.strip().lower())
 
-@app.route("/api/v1/plans?state=<state>", methods=['GET'])
-def get_plans_st(state):
-    """
-    Get available plan IDs, rates, and rate areas for the state.
+    plans = db.session.execute(stmt.order_by(Plan.plan_id)).scalars().all()
+    if not plans:
+        return bad_request("No plans matched the requested filters.")
 
-    :param state: state
-    :return plans: plan data
-    """
-    pass
-
-@app.route("/api/v1/plans?rate_area=<int:rate_area>", methods=['GET'])
-def get_plans_ra(rate_area):
-    """
-    Get available plan IDs, states, and rates for rate area
-
-    :params rate_area: rate area
-    :return plans: plan data
-    """
-
-
-@app.route("/api/v1/rate_area?state=<state>&zipcode=<zipcode>", methods=['GET'])
-def get_rate_area_st_zip(state, zipcode):
-    """
-    Get rate area(s) for this state and zipcode
-    
-    :param state: state
-    :param zipcode: zipcode
-    """
+    return jsonify(
+        {
+            "plans": [
+                {
+                    "plan_id": plan.plan_id,
+                    "state": plan.state_abbreviation,
+                    "metal_level": plan.metal_level.name,
+                    "rate": float(plan.rate),
+                    "rate_area": plan.rate_area.area_number,
+                }
+                for plan in plans
+            ]
+        }
+    )
 
 
-@app.route("/v1/rate_areas?zipcode=<zipcode>", methods=['GET'])
-def get_rate_areas(zipcode):
-    pass
+def get_plans_st_ra_ml(state: str, rate_area: int, metal_level: str):
+    """Compatibility helper retained for unit tests."""
+    state = state.strip().upper()
+    stmt = (
+        sa.select(Plan)
+        .join(RateArea)
+        .join(MetalLevel)
+        .where(Plan.state_abbreviation == state)
+        .where(RateArea.area_number == rate_area)
+        .where(sa.func.lower(MetalLevel.name) == metal_level.strip().lower())
+    )
 
-@app.route("/api/v1/zipcodes", methods=['GET'])
-def get_zipcodes():
-    pass
+    plans = db.session.execute(stmt.order_by(Plan.plan_id)).scalars().all()
+    return jsonify(
+        {
+            "plans": [
+                {
+                    "plan_id": plan.plan_id,
+                    "state": plan.state_abbreviation,
+                    "metal_level": plan.metal_level.name,
+                    "rate": float(plan.rate),
+                    "rate_area": plan.rate_area.area_number,
+                }
+                for plan in plans
+            ]
+        }
+    )
