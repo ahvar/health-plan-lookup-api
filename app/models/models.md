@@ -12,8 +12,10 @@ lookup tables for geography plus plan-specific tables.
 ### Plans + Rating Context
 - **RateArea** (`rate_areas`): unique per `(state_abbreviation, area_number)`. A rate
   area belongs to one state and is referenced by both plans and zip codes.
-- **Plan** (`plans`): uniquely identified by `plan_id`, with `metal_level`, `rate`, and
-  references to both `state` and `rate_area`.
+- **MetalLevel** (`metal_levels`): normalized lookup table for plan metal tiers, unique
+  per `name`.
+- **Plan** (`plans`): uniquely identified by `plan_id`, with `rate`, and references to
+  `state`, `rate_area`, and `metal_level`.
 
 ### Postal + SLCSP Inputs
 - **ZipCode** (`zip_codes`): unique per `(zipcode, state_abbreviation, county_id)`,
@@ -26,8 +28,9 @@ lookup tables for geography plus plan-specific tables.
 - `State` → `County`, `RateArea`, `ZipCode`, `Plan`
 - `County` → `ZipCode`
 - `RateArea` → `Plan`, `ZipCode`
+- `MetalLevel` → `Plan`
 - `ZipCode` provides rate-area context for `SlcspRequest` lookups by zipcode.
 
 Indexes and unique constraints are defined to reflect expected lookup patterns:
 state name and abbreviation, county code/name per state, zipcode/state/county tuples,
-and rate-area identifiers per state.
+rate-area identifiers per state, and metal-level lookups by normalized name.
