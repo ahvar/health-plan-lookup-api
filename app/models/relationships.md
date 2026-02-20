@@ -119,9 +119,9 @@ erDiagram
     }
 ```
 
-## SQL Diagram Import for Lucidchart
+## Lucidchart Upload File
 
-Use `app/models/lucidchart_schema.sql` with Lucidchart's **Database > Import SQL** workflow.
+Use `app/models/lucidchart_relationships.drawio` for Lucidchart import/upload (Draw.io format is supported by Lucidchart).
 
 ## Notes on Ambiguity Handling
 
