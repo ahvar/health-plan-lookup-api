@@ -1,11 +1,11 @@
-from flask import Flask
-
 from app import db
 from app.api.plans import get_plans_st_ra_ml
-from app.models import Plan, RateArea, State
+from app.models import MetalLevel, Plan, RateArea, State
 
 
 def create_test_app():
+    from flask import Flask
+
     app = Flask(__name__)
     app.config.update(
         SQLALCHEMY_DATABASE_URI="sqlite://",
@@ -19,24 +19,27 @@ def create_test_app():
 def seed_plan_data():
     state = State(abbreviation="MO", name="Missouri")
     rate_area = RateArea(state_abbreviation="MO", area_number=3)
+    silver = MetalLevel(name="Silver")
+    bronze = MetalLevel(name="Bronze")
     plans = [
         Plan(
             plan_id="11512345602",
             state_abbreviation="MO",
-            metal_level="Silver",
+            metal_level=silver,
             rate=310.50,
             rate_area=rate_area,
         ),
         Plan(
             plan_id="11512345601",
             state_abbreviation="MO",
-            metal_level="Bronze",
+            metal_level=bronze,
             rate=298.62,
             rate_area=rate_area,
         ),
     ]
     db.session.add(state)
     db.session.add(rate_area)
+    db.session.add_all([silver, bronze])
     db.session.add_all(plans)
     db.session.commit()
 

@@ -5,7 +5,7 @@ from app import db
 from app.api import bp
 from app.api.authentication import require_api_key
 from app.api.errors import api_error_boundary, bad_request
-from app.models import Plan, RateArea
+from app.models import MetalLevel, Plan, RateArea
 
 
 @bp.get("/plans")
@@ -16,14 +16,14 @@ def get_plans():
     rate_area = request.args.get("rate_area", type=int)
     metal_level = request.args.get("metal_level")
 
-    stmt = sa.select(Plan).join(RateArea)
+    stmt = sa.select(Plan).join(RateArea).join(MetalLevel)
 
     if state:
         stmt = stmt.where(Plan.state_abbreviation == state.strip().upper())
     if rate_area is not None:
         stmt = stmt.where(RateArea.area_number == rate_area)
     if metal_level:
-        stmt = stmt.where(sa.func.lower(Plan.metal_level) == metal_level.strip().lower())
+        stmt = stmt.where(sa.func.lower(MetalLevel.name) == metal_level.strip().lower())
 
     plans = db.session.execute(stmt.order_by(Plan.plan_id)).scalars().all()
     if not plans:
@@ -35,7 +35,7 @@ def get_plans():
                 {
                     "plan_id": plan.plan_id,
                     "state": plan.state_abbreviation,
-                    "metal_level": plan.metal_level,
+                    "metal_level": plan.metal_level.name,
                     "rate": float(plan.rate),
                     "rate_area": plan.rate_area.area_number,
                 }
@@ -51,9 +51,10 @@ def get_plans_st_ra_ml(state: str, rate_area: int, metal_level: str):
     stmt = (
         sa.select(Plan)
         .join(RateArea)
+        .join(MetalLevel)
         .where(Plan.state_abbreviation == state)
         .where(RateArea.area_number == rate_area)
-        .where(sa.func.lower(Plan.metal_level) == metal_level.strip().lower())
+        .where(sa.func.lower(MetalLevel.name) == metal_level.strip().lower())
     )
 
     plans = db.session.execute(stmt.order_by(Plan.plan_id)).scalars().all()
@@ -63,7 +64,7 @@ def get_plans_st_ra_ml(state: str, rate_area: int, metal_level: str):
                 {
                     "plan_id": plan.plan_id,
                     "state": plan.state_abbreviation,
-                    "metal_level": plan.metal_level,
+                    "metal_level": plan.metal_level.name,
                     "rate": float(plan.rate),
                     "rate_area": plan.rate_area.area_number,
                 }

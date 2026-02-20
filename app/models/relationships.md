@@ -1,28 +1,129 @@
-## One-to-many Relationship
-There are cases where the duplication that occurs when storing secondary data in the
-same table as the primary entity is a problem. This is because the table may grow much
-larger than it needs to be and variation in the spelling of duplicated data can produce
-incorrectly grouped results. When you find that information is being duplicated, consider
-defining the entity with its own table.
+## Relationship Review (Normalized)
 
-1. state-to-plan: there are many plans for a given state
-2. metal-level-to-plan: a metal level can have multiple plans
-3. rate-to-plan: this is actually a one-to-one relationship (which is a special kind of one-to-many relationship) because there is only one rate for each plan
-4. rate-area-to-plan: one rate area can have many plans
-5. state-to-zipcode: a state can have many zip codes
-6. state-to-county-code: a state can have many county codes
-7. state-to-county-name: a state can have many county names
-8. zipcode-to-rate-area: a zipcode can have multiple rate areas (which would make the SLCSP indeterminable but that calculation is made in the application logic)
-9. rate-area-to-zipcode: a rate area can have more than one zipcode
-10. state-to-rate-area: this is another one-to-one relationship
+This design normalizes plan metal tiers into a dedicated lookup table so `plans` does not
+repeat tier strings on every row.
 
-## Database Tables
+## Key relationship decisions
 
-1. States should be in a table with relationships to zipcodes, counties, county codes, rate areas, metal levels, and plans. The state has the name and abbreviation
-2. Plans should be in a table containing the plan_id and the rate
-3. Metal levels should be in a table
-4. Rate areas should be in a table
-5. zipcodes are in their own table
+1. **`state` to `rate area` is one-to-many**.
+   - A state can contain multiple rate areas (`rate_areas.area_number` scoped by state).
+2. **`plan` to `rate` is not one-to-one**.
+   - `rate` remains a scalar attribute on `plans`.
+3. **`metal_level` is now a normalized entity**.
+   - `metal_levels` stores unique tier names (`Bronze`, `Silver`, etc.).
+   - `plans` references `metal_levels` with `metal_level_id`.
+4. **`state` to `county code` / `county name` are attributes, not standalone entities**.
+5. **Zip-to-rate-area mapping is many-to-many at the natural-key level**, represented by
+   `zip_codes` rows that bind zipcode + state + county + rate area context.
 
+## Database Entities and Cardinality
 
+### `states`
+- **Primary key:** `abbreviation`
+- **One-to-many:** `counties`, `rate_areas`, `plans`, `zip_codes`
 
+### `counties`
+- **Primary key:** `id`
+- **Foreign key:** `state_abbreviation -> states.abbreviation`
+- **One-to-many:** `zip_codes`
+- **Constraints:** county `code` and `name` are unique *within a state*
+
+### `rate_areas`
+- **Primary key:** `id`
+- **Foreign key:** `state_abbreviation -> states.abbreviation`
+- **One-to-many:** `plans`, `zip_codes`
+- **Constraint:** unique `(state_abbreviation, area_number)`
+
+### `metal_levels`
+- **Primary key:** `id`
+- **Attribute:** `name` (unique)
+- **One-to-many:** `plans`
+
+### `plans`
+- **Primary key:** `id`
+- **Natural key:** `plan_id` (unique)
+- **Foreign keys:**
+  - `state_abbreviation -> states.abbreviation`
+  - `rate_area_id -> rate_areas.id`
+  - `metal_level_id -> metal_levels.id`
+- **Attributes:** `rate`
+
+### `zip_codes`
+- **Primary key:** `id`
+- **Foreign keys:**
+  - `state_abbreviation -> states.abbreviation`
+  - `county_id -> counties.id`
+  - `rate_area_id -> rate_areas.id`
+- **Constraint:** unique `(zipcode, state_abbreviation, county_id)`
+
+### `slcsp_requests`
+- Stores requested zipcode inputs; no FK enforced to `zip_codes`.
+
+## Relationship Diagram (Lucidchart-friendly Mermaid)
+
+```mermaid
+erDiagram
+    STATES ||--o{ COUNTIES : has
+    STATES ||--o{ RATE_AREAS : has
+    STATES ||--o{ PLANS : has
+    STATES ||--o{ ZIP_CODES : has
+
+    COUNTIES ||--o{ ZIP_CODES : contains
+    RATE_AREAS ||--o{ ZIP_CODES : maps
+    RATE_AREAS ||--o{ PLANS : prices
+    METAL_LEVELS ||--o{ PLANS : classifies
+
+    STATES {
+      string abbreviation PK
+      string name
+    }
+
+    COUNTIES {
+      int id PK
+      string code
+      string name
+      string state_abbreviation FK
+    }
+
+    RATE_AREAS {
+      int id PK
+      string state_abbreviation FK
+      int area_number
+    }
+
+    METAL_LEVELS {
+      int id PK
+      string name UK
+    }
+
+    PLANS {
+      int id PK
+      string plan_id UK
+      string state_abbreviation FK
+      int rate_area_id FK
+      int metal_level_id FK
+      numeric rate
+    }
+
+    ZIP_CODES {
+      int id PK
+      string zipcode
+      string state_abbreviation FK
+      int county_id FK
+      int rate_area_id FK
+    }
+
+    SLCSP_REQUESTS {
+      int id PK
+      string zipcode
+    }
+```
+
+## SQL Diagram Import for Lucidchart
+
+Use `app/models/lucidchart_schema.sql` with Lucidchart's **Database > Import SQL** workflow.
+
+## Notes on Ambiguity Handling
+
+- A zipcode can appear in multiple rows in `zip_codes` (different county/rate-area context).
+- That ambiguity is resolved in application logic when computing SLCSP outcomes.
