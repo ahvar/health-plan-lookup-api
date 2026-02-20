@@ -59,7 +59,7 @@ repeat tier strings on every row.
 ### `slcsp_requests`
 - Stores requested zipcode inputs; no FK enforced to `zip_codes`.
 
-## Relationship Diagram (Mermaid)
+## Relationship Diagram (Lucidchart-friendly Mermaid)
 
 ```mermaid
 erDiagram
