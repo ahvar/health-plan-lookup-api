@@ -31,6 +31,19 @@ class RateArea(db.Model):
     )
 
 
+class MetalLevel(db.Model):
+    __tablename__ = "metal_levels"
+
+    id: so.Mapped[int] = so.mapped_column(primary_key=True)
+    name: so.Mapped[str] = so.mapped_column(sa.String(20), nullable=False, unique=True)
+
+    plans: so.WriteOnlyMapped["Plan"] = so.relationship(
+        back_populates="metal_level", cascade="all, delete-orphan"
+    )
+
+    __table_args__ = (sa.Index("idx_metal_levels_name", "name"),)
+
+
 class Plan(db.Model):
     __tablename__ = "plans"
 
@@ -41,7 +54,9 @@ class Plan(db.Model):
         sa.ForeignKey("states.abbreviation", ondelete="CASCADE"),
         nullable=False,
     )
-    metal_level: so.Mapped[str] = so.mapped_column(sa.String(20), nullable=False)
+    metal_level_id: so.Mapped[int] = so.mapped_column(
+        sa.ForeignKey("metal_levels.id", ondelete="RESTRICT"), nullable=False
+    )
     rate: so.Mapped[float] = so.mapped_column(sa.Numeric(10, 2), nullable=False)
     rate_area_id: so.Mapped[int] = so.mapped_column(
         sa.ForeignKey("rate_areas.id", ondelete="CASCADE"), nullable=False
@@ -49,11 +64,12 @@ class Plan(db.Model):
 
     state: so.Mapped["State"] = so.relationship(back_populates="plans")
     rate_area: so.Mapped["RateArea"] = so.relationship(back_populates="plans")
+    metal_level: so.Mapped["MetalLevel"] = so.relationship(back_populates="plans")
 
     __table_args__ = (
         sa.Index("idx_plans_plan_id", "plan_id"),
         sa.Index("idx_plans_state", "state_abbreviation"),
-        sa.Index("idx_plans_metal", "metal_level"),
+        sa.Index("idx_plans_metal_level", "metal_level_id"),
         sa.Index("idx_plans_rate_area", "rate_area_id"),
     )
 
