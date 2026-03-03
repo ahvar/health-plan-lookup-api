@@ -1,0 +1,63 @@
+<mxfile host="app.diagrams.net" modified="2026-02-20T20:00:00.000Z" agent="Mozilla/5.0" version="24.7.7" editor="diagramly">
+  <diagram id="health-plan-er" name="Health Plan ERD">
+    <mxGraphModel dx="1422" dy="794" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1600" pageHeight="1200" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+
+        <mxCell id="states" value="states&#xa;PK abbreviation&#xa;name" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="40" y="40" width="200" height="90" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="counties" value="counties&#xa;PK id&#xa;code&#xa;name&#xa;FK state_abbreviation" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="320" y="20" width="240" height="120" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="rate_areas" value="rate_areas&#xa;PK id&#xa;FK state_abbreviation&#xa;area_number" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="320" y="180" width="240" height="110" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="metal_levels" value="metal_levels&#xa;PK id&#xa;UK name" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="1">
+          <mxGeometry x="320" y="340" width="240" height="90" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="plans" value="plans&#xa;PK id&#xa;UK plan_id&#xa;FK state_abbreviation&#xa;FK rate_area_id&#xa;FK metal_level_id&#xa;rate" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="1">
+          <mxGeometry x="650" y="170" width="260" height="150" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="zip_codes" value="zip_codes&#xa;PK id&#xa;zipcode&#xa;FK state_abbreviation&#xa;FK county_id&#xa;FK rate_area_id" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="1">
+          <mxGeometry x="650" y="20" width="260" height="140" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="slcsp_requests" value="slcsp_requests&#xa;PK id&#xa;zipcode" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="960" y="20" width="220" height="90" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="e1" value="1-to-many" style="endArrow=block;html=1;rounded=0;" edge="1" parent="1" source="states" target="counties">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e2" value="1-to-many" style="endArrow=block;html=1;rounded=0;" edge="1" parent="1" source="states" target="rate_areas">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e3" value="1-to-many" style="endArrow=block;html=1;rounded=0;" edge="1" parent="1" source="states" target="plans">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e4" value="1-to-many" style="endArrow=block;html=1;rounded=0;" edge="1" parent="1" source="states" target="zip_codes">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e5" value="1-to-many" style="endArrow=block;html=1;rounded=0;" edge="1" parent="1" source="counties" target="zip_codes">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e6" value="1-to-many" style="endArrow=block;html=1;rounded=0;" edge="1" parent="1" source="rate_areas" target="plans">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e7" value="1-to-many" style="endArrow=block;html=1;rounded=0;" edge="1" parent="1" source="rate_areas" target="zip_codes">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e8" value="1-to-many" style="endArrow=block;html=1;rounded=0;" edge="1" parent="1" source="metal_levels" target="plans">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

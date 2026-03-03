@@ -1,0 +1,1 @@
+In this context, a resource is an item of interest in the domain of the application. For example, health plans and their corresponding rates are the resources for this application. A collection of all the resource in a class has an assigned URL: /api/state/plans
